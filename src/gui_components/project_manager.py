@@ -56,7 +56,9 @@ class ProjectManager:
             for mod in self.parent.active_modules:
                 if hasattr(mod, 'cached_widget'):
                     mod.cached_widget.destroy()
-            self.parent.active_modules = []
+                    
+            # --- CHANGED: Empty the list in place instead of creating a new one ---
+            self.parent.active_modules.clear() 
             
             # Rebuild
             for mod_entry in data:

@@ -12,17 +12,20 @@ class SequentialRunManager:
     Manages the Sequential/Batch Execution Window.
     """
 
+    #  Kkeep active_modules in the definition to not break gui_app.py, 
+    # but we will not save it to self.active_modules anymore.
     def __init__(self, parent_app, active_modules):
         self.root = parent_app.root
         self.parent = parent_app
-        self.active_modules = active_modules
+        # self.active_modules = active_modules
         
         self.seq_map = {}       
         self.defined_vars = []  
         self.planned_runs = []  
 
     def open_window(self):
-        if not self.active_modules:
+        # Now looks at self.parent.active_modules
+        if not self.parent.active_modules:
             messagebox.showwarning("Project Empty", "Please add modules to the project first.")
             return
 
@@ -64,7 +67,8 @@ class SequentialRunManager:
         combo_values = []
         self.seq_map = {}
         
-        for m_idx, mod in enumerate(self.active_modules):
+        # <-- CHANGED: Now looks at self.parent.active_modules
+        for m_idx, mod in enumerate(self.parent.active_modules):
             for card in mod.cards:
                 if card.active_if is not None:
                     try: 
@@ -305,8 +309,8 @@ class SequentialRunManager:
                 self._apply_run_config(run["config"])
                 full_text = self._generate_full_input()
                 
-                # --- CHANGED: Passing the active_modules to save the JSON state ---
-                if self._execute_single_run(out_root, run["folder"], full_text, exe, run["config"], self.active_modules):
+                #  Passed self.parent.active_modules instead of self.active_modules
+                if self._execute_single_run(out_root, run["folder"], full_text, exe, run["config"], self.parent.active_modules):
                     success += 1
 
             messagebox.showinfo("Done", f"Batch completed.\nSuccessful: {success}/{len(self.planned_runs)}")
@@ -326,7 +330,8 @@ class SequentialRunManager:
 
     def _create_state_backup(self):
         backup = []
-        for mod in self.active_modules:
+        #  Now looks at self.parent.active_modules
+        for mod in self.parent.active_modules:
             m_state = {}
             for c in mod.cards:
                 c_state = {}
@@ -336,7 +341,8 @@ class SequentialRunManager:
         return backup
 
     def _restore_state(self, backup):
-        for i, mod in enumerate(self.active_modules):
+        #  Now looks at self.parent.active_modules
+        for i, mod in enumerate(self.parent.active_modules):
             if i < len(backup):
                 saved = backup[i]
                 for c in mod.cards:
@@ -353,8 +359,9 @@ class SequentialRunManager:
             m_idx, c_name, i_name = cfg["key"]
             val = cfg["val"]
             if not cfg["is_file"]:
-                if m_idx < len(self.active_modules):
-                    mod = self.active_modules[m_idx]
+                #  Now looks at self.parent.active_modules
+                if m_idx < len(self.parent.active_modules):
+                    mod = self.parent.active_modules[m_idx]
                     for c in mod.cards:
                         if c.name == c_name:
                             for inp in c.inputs:
@@ -364,7 +371,8 @@ class SequentialRunManager:
 
     def _generate_full_input(self):
         full_text = ""
-        for mod in self.active_modules:
+        #  Now looks at self.parent.active_modules
+        for mod in self.parent.active_modules:
             full_text += mod.write() + "\n"
         full_text += "stop\n"
         return full_text
@@ -389,7 +397,7 @@ class SequentialRunManager:
         # 3. Write Input File
         with open(os.path.join(job_dir, "input.inp"), "w") as f: f.write(content)
 
-        # 4. NEW: Save Project State JSON
+        # 4. Save Project State JSON
         self._save_run_state_json(job_dir, modules_snapshot)
 
         # 5. Run NJOY
