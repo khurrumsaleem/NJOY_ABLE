@@ -210,3 +210,8 @@ __marimo__/
 #todo
 to_do 
 outputs
+src/__pycache__
+src/build
+src/dist
+
+.vscode
